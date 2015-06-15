@@ -8,7 +8,8 @@ import settings
 import utils
 
 
-dryrun = False
+sold_out = False
+dry_run = False
 verbose = False
 quiet = False
 
@@ -48,8 +49,8 @@ def parse_data(data):
     return servers
 
 
-def fetch_avails(servers, previous_state):
-    avails = []
+def fetch_available(servers, previous_state):
+    offers = []
 
     for server, dcs in servers.items():
         for dc, stock in dcs.items():
@@ -62,9 +63,28 @@ def fetch_avails(servers, previous_state):
                     pass
 
                 if not already_avail:
-                        avails.append({'server': server, 'stock': stock, 'dc': dc.upper()})
+                    offers.append({'server': server, 'stock': stock, 'dc': dc.upper()})
 
-    return avails
+    return offers
+
+
+def fetch_sold_out(servers, previous_state):
+    offers = []
+
+    for server, dcs in servers.items():
+        for dc, stock in dcs.items():
+            if stock is False:
+                already_avail = False
+
+                try:
+                    already_avail = previous_state.get(server).get(dc)
+                except AttributeError:
+                    pass
+
+                if already_avail:
+                    offers.append({'server': server, 'stock': stock, 'dc': dc.upper()})
+
+    return offers
 
 
 def update_state(servers):
@@ -92,16 +112,28 @@ def check():
     if verbose:
         pprint.pprint(previous_state)
 
-    avails = fetch_avails(servers, previous_state)
+    offers = fetch_available(servers, previous_state)
     if verbose:
-        pprint.pprint(avails)
+        pprint.pprint(offers)
 
-    for avail in avails:
-        message = '{} is now available in {} at {}'.format(avail['server'], avail['stock'], avail['dc'])
+    for offer in offers:
+        message = '{} is now available in {} at {}'.format(offer['server'], offer['stock'], offer['dc'])
         if not quiet:
             print(message)
-        if not dryrun:
+        if not dry_run:
             utils.send_sms('OVH-Availability: {}'.format(message))
+
+    if sold_out:
+        offers = fetch_sold_out(servers, previous_state)
+        if verbose:
+            pprint.pprint(offers)
+
+        for offer in offers:
+            message = '{} is no longer available at {}'.format(offer['server'], offer['dc'])
+            if not quiet:
+                print(message)
+            if not dry_run:
+                utils.send_sms('OVH-Availability: {}'.format(message))
 
     state = update_state(servers)
     if verbose:
@@ -112,13 +144,15 @@ def check():
 
 
 def main():
-    opts, args = getopt.getopt(sys.argv[1:], 'n:v:q', ['dry-run', 'verbose', 'quiet'])
+    opts, args = getopt.getopt(sys.argv[1:], 's:n:v:q', ['sold-out', 'dry-run', 'verbose', 'quiet'])
 
-    global dryrun, verbose, quiet
+    global sold_out, dry_run, verbose, quiet
 
     for opt in opts:
-        if opt[0] in ('-n', '--dry-run'):
-            dryrun = True
+        if opt[0] in ('-s', '--sold-out'):
+            sold_out = True
+        elif opt[0] in ('-n', '--dry-run'):
+            dry_run = True
         elif opt[0] in ('-v', '--verbose'):
             verbose = True
         elif opt[0] in ('-q', '--quiet'):

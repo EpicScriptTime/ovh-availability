@@ -1,9 +1,9 @@
 import os.path
 import pickle
+import collections
 
 from twilio import TwilioRestException
 from twilio.rest import TwilioRestClient
-from collections import defaultdict
 
 import settings
 
@@ -13,8 +13,14 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 SAVE_FILENAME = os.path.join(BASE_DIR, 'state.pickle')
 
 
+# http://stackoverflow.com/a/18376589
+class PrettyDefaultDict(collections.defaultdict):
+    __repr__ = dict.__repr__
+
+
+# http://stackoverflow.com/a/21465442
 def recursive_dict():
-    return defaultdict(recursive_dict)
+    return PrettyDefaultDict(recursive_dict)
 
 
 def load_state(filename=SAVE_FILENAME):

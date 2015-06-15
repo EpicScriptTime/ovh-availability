@@ -1,6 +1,7 @@
 import os.path
 import pickle
 import collections
+import datetime
 
 from twilio import TwilioRestException
 from twilio.rest import TwilioRestClient
@@ -50,3 +51,11 @@ def send_sms(body):
         return message.sid
     except TwilioRestException as e:
         raise e
+
+
+def get_current_timestamp():
+    return datetime.datetime.now().strftime('%y%m%d%H%M%S')
+
+
+def notify(message):
+    send_sms('OVH-AVAILABILITY: {} ({})'.format(message, get_current_timestamp()))

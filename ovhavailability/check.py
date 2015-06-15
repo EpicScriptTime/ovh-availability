@@ -117,11 +117,11 @@ def check():
         pprint.pprint(offers)
 
     for offer in offers:
-        message = '{} is now available in {} at {}'.format(offer['server'], offer['stock'], offer['dc'])
+        message = '{} is now available in {} at {}.'.format(offer['server'], offer['stock'], offer['dc'])
         if not quiet:
             print(message)
         if not dry_run:
-            utils.send_sms('OVH-Availability: {}'.format(message))
+            utils.notify(message)
 
     if sold_out:
         offers = fetch_sold_out(servers, previous_state)
@@ -129,11 +129,11 @@ def check():
             pprint.pprint(offers)
 
         for offer in offers:
-            message = '{} is no longer available at {}'.format(offer['server'], offer['dc'])
+            message = '{} is no longer available at {}.'.format(offer['server'], offer['dc'])
             if not quiet:
                 print(message)
             if not dry_run:
-                utils.send_sms('OVH-Availability: {}'.format(message))
+                utils.notify(message)
 
     state = update_state(servers)
     if verbose:

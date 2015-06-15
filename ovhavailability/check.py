@@ -1,10 +1,16 @@
+import sys
+import getopt
 import requests
-# import pprint
+import pprint
 
 import mapping
 import settings
 import utils
 
+
+dryrun = False
+verbose = False
+quiet = False
 
 OVH_API_URL = 'https://ws.ovh.ca/dedicated/r2/ws.dispatcher/getAvailability2'
 
@@ -71,29 +77,54 @@ def update_state(servers):
     return state
 
 
-def main():
+def check():
+    if not quiet:
+        print('Running check.py in dry run (not sending any SMS)')
+
     data = query_api()
     # data = load_state(filename='data.pickle')
 
     servers = parse_data(data)
-    # pprint.pprint(servers)
+    if verbose:
+        pprint.pprint(servers)
 
     previous_state = utils.load_state()
-    # pprint.pprint(previous_state)
+    if verbose:
+        pprint.pprint(previous_state)
 
     avails = fetch_avails(servers, previous_state)
-    # pprint.pprint(avails)
+    if verbose:
+        pprint.pprint(avails)
 
     for avail in avails:
         message = '{} is now available in {} at {}'.format(avail['server'], avail['stock'], avail['dc'])
-        print(message)
-        # utils.send_sms('OVH-Availability: {}'.format(message))
+        if not quiet:
+            print(message)
+        if not dryrun:
+            utils.send_sms('OVH-Availability: {}'.format(message))
 
     state = update_state(servers)
-    # pprint.pprint(state)
+    if verbose:
+        pprint.pprint(state)
 
     utils.save_state(state)
     # utils.save_state(data, filename='data.pickle')
+
+
+def main():
+    opts, args = getopt.getopt(sys.argv[1:], 'n:v:q', ['dry-run', 'verbose', 'quiet'])
+
+    global dryrun, verbose, quiet
+
+    for opt in opts:
+        if opt[0] in ('-n', '--dry-run'):
+            dryrun = True
+        elif opt[0] in ('-v', '--verbose'):
+            verbose = True
+        elif opt[0] in ('-q', '--quiet'):
+            quiet = True
+
+    check()
 
 
 if __name__ == '__main__':

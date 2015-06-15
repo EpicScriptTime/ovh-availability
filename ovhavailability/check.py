@@ -15,7 +15,7 @@ def query_api():
 
 def parse_data(data):
     offers = data.get('answer').get('availability')
-    servers = utils.multilevel_dict()
+    servers = utils.recursive_dict()
 
     for offer in offers:
         ref = offer.get('reference')
@@ -83,7 +83,7 @@ def main():
     for avail in avails:
         message = '{} is now available in {} at {}'.format(avail['server'], avail['stock'], avail['dc'])
         print(message)
-        # utils.send_sms('OVH-Availability: ' + message)
+        # utils.send_sms('OVH-Availability: {}'.format(message))
 
     state = update_state(servers)
     # pprint.pprint(state)

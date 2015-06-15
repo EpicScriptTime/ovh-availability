@@ -8,13 +8,13 @@ from collections import defaultdict
 import settings
 
 
-PATH = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-SAVE_FILENAME = PATH + '/state.pickle'
+SAVE_FILENAME = os.path.join(BASE_DIR, 'state.pickle')
 
 
-def multilevel_dict():
-    return defaultdict(multilevel_dict)
+def recursive_dict():
+    return defaultdict(recursive_dict)
 
 
 def load_state(filename=SAVE_FILENAME):

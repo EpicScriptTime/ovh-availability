@@ -48,21 +48,25 @@ def fetch_avails(servers, previous_state):
     for server, dcs in servers.items():
         for dc, stock in dcs.items():
             if stock is not False:
-                if previous_state.get(server) is not True:
-                    avails.append({'server': server, 'stock': stock, 'dc': dc.upper()})
+                already_avail = False
+
+                try:
+                    already_avail = previous_state.get(server).get(dc)
+                except AttributeError:
+                    pass
+
+                if not already_avail:
+                        avails.append({'server': server, 'stock': stock, 'dc': dc.upper()})
 
     return avails
 
 
 def update_state(servers):
-    state = {}
+    state = utils.recursive_dict()
 
     for server, dcs in servers.items():
         for dc, time in dcs.items():
-            if time is not False:
-                state[server] = True
-            else:
-                state[server] = False
+            state[server][dc] = (time is not False)
 
     return state
 

@@ -1,6 +1,5 @@
 import requests
 
-import mapping
 import settings
 import utils
 
@@ -22,9 +21,9 @@ class AvailabilityService():
         for offer in offers:
             ref = offer.get('reference')
             zones = offer.get('zones')
-            server = mapping.OFFER_TO_SERVER_MAPPING.get(ref)
+            server = settings.OFFER_TO_SERVER_MAPPING.get(ref)
 
-            if ref not in mapping.OFFER_TO_SERVER_MAPPING:
+            if ref not in settings.OFFER_TO_SERVER_MAPPING:
                 continue
             if server not in settings.WATCHED_SERVER_LIST:
                 continue

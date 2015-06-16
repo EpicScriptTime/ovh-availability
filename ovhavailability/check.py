@@ -2,9 +2,8 @@ import sys
 import getopt
 
 import settings
-import utils
 
-from utils import print_debug, print_info
+from utils import print_debug, print_info, notify
 from services import AvailabilityService
 from managers import StateManager
 
@@ -21,7 +20,6 @@ def perform_check():
     manager = StateManager()
 
     service.query_api()
-    # data = load_state(filename='data.pickle')
 
     service.parse_data()
     print_debug(service.servers)
@@ -36,7 +34,7 @@ def perform_check():
         message = '{} is now available in {} at {}.'.format(offer['server'], offer['stock'], offer['dc'])
         print_info(message)
         if not dry_run:
-            utils.notify(message)
+            notify(message)
 
     if sold_out:
         offers = service.fetch_sold_out(manager.state)
@@ -46,13 +44,12 @@ def perform_check():
             message = '{} is no longer available at {}.'.format(offer['server'], offer['dc'])
             print_info(message)
             if not dry_run:
-                utils.notify(message)
+                notify(message)
 
     manager.update_state(service.servers)
     print_debug(manager.state)
 
     manager.save_state()
-    # utils.save_state(data, filename='data.pickle')
 
 
 def main():

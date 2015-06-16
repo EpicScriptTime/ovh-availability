@@ -10,11 +10,6 @@ from twilio.rest import TwilioRestClient
 import settings
 
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
-SAVE_FILENAME = os.path.join(BASE_DIR, 'state.pickle')
-
-
 # http://stackoverflow.com/a/18376589
 class PrettyDefaultDict(collections.defaultdict):
     __repr__ = dict.__repr__
@@ -25,23 +20,23 @@ def recursive_dict():
     return PrettyDefaultDict(recursive_dict)
 
 
-def load_state(filename=SAVE_FILENAME):
-    state = {}
+def load_file(filename):
+    data = {}
 
     if os.path.isfile(filename):
         stream = open(filename, 'rb')
-        state = pickle.load(stream)
+        data = pickle.load(stream)
         stream.close()
 
-        if not isinstance(state, dict):
-            state = {}
+        if not isinstance(data, dict):
+            data = {}
 
-    return state
+    return data
 
 
-def save_state(state, filename=SAVE_FILENAME):
+def save_file(data, filename):
     stream = open(filename, 'wb')
-    pickle.dump(state, stream)
+    pickle.dump(data, stream)
     stream.close()
 
 

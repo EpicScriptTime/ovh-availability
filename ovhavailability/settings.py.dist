@@ -41,3 +41,7 @@ WATCHED_SERVER_LIST = [
     #'SYS-IP-6',
     #'SYS-IP-6S',
 ]
+
+DEBUG = False
+
+QUIET = False

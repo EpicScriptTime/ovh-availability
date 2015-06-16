@@ -1,4 +1,5 @@
 import os.path
+import pprint
 import pickle
 import collections
 import datetime
@@ -42,6 +43,17 @@ def save_state(state, filename=SAVE_FILENAME):
     stream = open(filename, 'wb')
     pickle.dump(state, stream)
     stream.close()
+
+
+def print_debug(var):
+    if not settings.QUIET:
+        if settings.DEBUG:
+            pprint.pprint(var)
+
+
+def print_info(var):
+    if not settings.QUIET:
+        print(var)
 
 
 def send_sms(body):

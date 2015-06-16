@@ -1,88 +1,15 @@
 import sys
 import getopt
-import requests
 
-import mapping
 import settings
 import utils
+
 from utils import print_debug, print_info
+from services import AvailabilityService
 
 
 sold_out = False
 dry_run = False
-
-OVH_API_URL = 'https://ws.ovh.ca/dedicated/r2/ws.dispatcher/getAvailability2'
-
-
-def query_api():
-    return requests.get(OVH_API_URL, timeout=30).json()
-
-
-def parse_data(data):
-    offers = data.get('answer').get('availability')
-    servers = utils.recursive_dict()
-
-    for offer in offers:
-        ref = offer.get('reference')
-        zones = offer.get('zones')
-        server = mapping.OFFER_TO_SERVER_MAPPING.get(ref)
-
-        if ref not in mapping.OFFER_TO_SERVER_MAPPING:
-            continue
-        if server not in settings.WATCHED_SERVER_LIST:
-            continue
-
-        for zone in zones:
-            avail = zone.get('availability')
-            dc = zone.get('zone')
-
-            if dc not in settings.WATCHED_DC_LIST:
-                continue
-
-            if avail not in ['unknown', 'unavailable']:
-                servers[server][dc] = avail
-            else:
-                servers[server][dc] = False
-
-    return servers
-
-
-def fetch_available(servers, previous_state):
-    offers = []
-
-    for server, dcs in servers.items():
-        for dc, stock in dcs.items():
-            if stock is not False:
-                already_avail = False
-
-                try:
-                    already_avail = previous_state.get(server).get(dc)
-                except AttributeError:
-                    pass
-
-                if not already_avail:
-                    offers.append({'server': server, 'stock': stock, 'dc': dc.upper()})
-
-    return offers
-
-
-def fetch_sold_out(servers, previous_state):
-    offers = []
-
-    for server, dcs in servers.items():
-        for dc, stock in dcs.items():
-            if stock is False:
-                already_avail = False
-
-                try:
-                    already_avail = previous_state.get(server).get(dc)
-                except AttributeError:
-                    pass
-
-                if already_avail:
-                    offers.append({'server': server, 'stock': stock, 'dc': dc.upper()})
-
-    return offers
 
 
 def update_state(servers):
@@ -99,16 +26,18 @@ def perform_check():
     if dry_run:
         print_info('Running check.py in dry run (not sending any SMS)')
 
-    data = query_api()
+    service = AvailabilityService()
+
+    service.query_api()
     # data = load_state(filename='data.pickle')
 
-    servers = parse_data(data)
-    print_debug(servers)
+    service.parse_data()
+    print_debug(service.servers)
 
     previous_state = utils.load_state()
     print_debug(previous_state)
 
-    offers = fetch_available(servers, previous_state)
+    offers = service.fetch_available(previous_state)
     print_debug(offers)
 
     for offer in offers:
@@ -118,7 +47,7 @@ def perform_check():
             utils.notify(message)
 
     if sold_out:
-        offers = fetch_sold_out(servers, previous_state)
+        offers = service.fetch_sold_out(previous_state)
         print_debug(offers)
 
         for offer in offers:
@@ -127,7 +56,7 @@ def perform_check():
             if not dry_run:
                 utils.notify(message)
 
-    state = update_state(servers)
+    state = update_state(service.servers)
     print_debug(state)
 
     utils.save_state(state)

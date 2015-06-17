@@ -4,7 +4,7 @@ import settings
 import utils
 
 
-OVH_API_URL = 'https://ws.ovh.ca/dedicated/r2/ws.dispatcher/getAvailability2'
+OVH_API_URL = 'https://ws.ovh.com/dedicated/r2/ws.dispatcher/getAvailability2'
 
 
 class AvailabilityService():
